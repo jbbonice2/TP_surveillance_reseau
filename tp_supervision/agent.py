@@ -1,8 +1,14 @@
+import socket
+import json
 import psutil
 import platform
 import os
 import time
 import uuid
+
+# Adresse IP et port du serveur
+SERVER_HOST = 'localhost'
+SERVER_PORT = 12345
 
 def get_processor_info():
     cpu_info = {
@@ -98,24 +104,33 @@ def gather_initial_system_info():
     }
     return system_info
 
+def send_data_to_server(data):
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect((SERVER_HOST, SERVER_PORT))
+            message = json.dumps(data) + '\n'
+            s.sendall(message.encode('utf-8'))
+            print("Données envoyées au serveur")
+    except Exception as e:
+        print(f"Erreur lors de l'envoi des données: {e}")
+
 def main():
     # Récupérer les informations initiales
     initial_info = gather_initial_system_info()
-    print("Initial system information:")
-    for key, value in initial_info.items():
-        print(f"{key}: {value}")
-    
-    # Boucle pour récupérer la charge toutes les deux minutes
+    data = {"initial_info": initial_info}
+    send_data_to_server(data)
+
+    # Boucle pour récupérer la charge toutes les 30 secondes
     while True:
         system_load = get_system_load()
         active_processes = get_active_processes_info()
-        print("\nSystem load:")
-        for key, value in system_load.items():
-            print(f"{key}: {value}")
-        print("\nActive processes:")
-        for proc in active_processes:
-            print(proc)
-        time.sleep(10)  # Pause de 2 minutes
+        data = {
+            "system_load": system_load,
+            "active_processes": count(active_processes),
+            'machine_mac':  get_mac_address()
+        }
+        send_data_to_server(data)
+        time.sleep(30)  # Pause de 30 secondes
 
 if __name__ == "__main__":
     main()

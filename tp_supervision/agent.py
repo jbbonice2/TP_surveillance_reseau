@@ -1,10 +1,10 @@
 import socket
 import json
-import psutil
 import platform
 import os
 import time
 import uuid
+import psutil
 
 # Adresse IP et port du serveur
 SERVER_HOST = 'localhost'
@@ -68,20 +68,25 @@ def get_mac_address():
 
 def get_system_load():
     cpu_load_per_core = psutil.cpu_percent(interval=1, percpu=True)
-    memory_usage = psutil.virtual_memory().percent
-    disk_usage = psutil.disk_usage('/').percent
-    swap_usage = psutil.swap_memory().percent
+    memory_info = psutil.virtual_memory()
+    swap_info = psutil.swap_memory()
+    disk_info = psutil.disk_usage('/')
     net_io = psutil.net_io_counters()
-    net_bandwidth = {
-        "bytes_sent": net_io.bytes_sent,
-        "bytes_recv": net_io.bytes_recv
-    }
+
     return {
+        "used_memory": memory_info.used,
+        "memory_usage": memory_info.percent,
+        "cache": memory_info.cached,
+        "swap_total": swap_info.total,
+        "swap_used": swap_info.used,
+        "swap_percentage": swap_info.percent,
+        "used_disk": disk_info.used,
+        "disk_percentage": disk_info.percent,
         "cpu_usage_per_core": cpu_load_per_core,
-        "memory_usage": memory_usage,
-        "disk_usage": disk_usage,
-        "swap_usage": swap_usage,
-        "net_bandwidth": net_bandwidth
+        "net_bandwidth": {
+            "bytes_sent": net_io.bytes_sent,
+            "bytes_recv": net_io.bytes_recv
+        },
     }
 
 def get_active_processes_info():
@@ -104,34 +109,42 @@ def gather_initial_system_info():
     }
     return system_info
 
-def send_data_to_server(data):
+def send_data_to_server(socket_conn, data):
     try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((SERVER_HOST, SERVER_PORT))
-            message = json.dumps(data) + '\n'
-            s.sendall(message.encode('utf-8'))
-            print("Données envoyées au serveur")
+        message = json.dumps(data) + '\n'
+        print(f"Envoi des données: {message}")
+        socket_conn.sendall(message.encode('utf-8'))
+        print("Données envoyées au serveur")
     except Exception as e:
         print(f"Erreur lors de l'envoi des données: {e}")
 
 def main():
-    # Récupérer les informations initiales
-    initial_info = gather_initial_system_info()
-    data = {"initial_info": initial_info}
-    send_data_to_server(data)
+    # Établir la connexion socket une fois
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        print(f"Tentative de connexion au serveur {SERVER_HOST}:{SERVER_PORT}")
+        s.connect((SERVER_HOST, SERVER_PORT))
+        print("Connexion établie")
 
-    # Boucle pour récupérer la charge toutes les 30 secondes
-    while True:
-        system_load = get_system_load()
-        active_processes = get_active_processes_info()
-        data = {
-            "system_load": system_load,
-            "active_processes": count(active_processes),
-            'machine_mac':  get_mac_address()
-        }
-        send_data_to_server(data)
-        time.sleep(30)  # Pause de 30 secondes
+        # Récupérer les informations initiales
+        print("Récupération des informations initiales du système")
+        initial_info = gather_initial_system_info()
+        data = {"initial_info": initial_info}
+        send_data_to_server(s, data)
+        print("\n\nInformations initiales envoyées au serveur : {}".format(data))
+
+        # Boucle pour récupérer la charge toutes les 30 secondes
+        while True:
+            print("Récupération de la charge du système")
+            system_load = get_system_load()
+            active_processes = get_active_processes_info()
+            system_load["active_processes"] = len(active_processes)
+            data = {
+                "system_load": system_load,
+            }
+            send_data_to_server(s, data)
+            print(f"\n\nEnvoyée au serveur: Charge du système: {system_load}")
+            print("Pause de 30 secondes")
+            time.sleep(5)  # Pause de 30 secondes
 
 if __name__ == "__main__":
     main()
-

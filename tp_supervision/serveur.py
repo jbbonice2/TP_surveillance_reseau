@@ -58,22 +58,26 @@ def insert_donnees_data(connection, machine_id, donnees_data):
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
     cursor = connection.cursor()
-    cursor.execute(query, (
-        machine_id,
-        donnees_data['used_memory'],
-        donnees_data['memory_percentage'],
-        donnees_data['cache'],
-        donnees_data['swap_total'],
-        donnees_data['swap_used'],
-        donnees_data['swap_percentage'],
-        donnees_data['used_disk'],
-        donnees_data['disk_percentage'],
-        json.dumps(donnees_data['cpu_usage_per_core']),
-        donnees_data['net_bandwidth']['bytes_sent'],
-        donnees_data['net_bandwidth']['bytes_recv'],
-        json.dumps(donnees_data['active_processes'])
-    ))
-    connection.commit()
+    try:
+        cursor.execute(query, (
+            machine_id,
+            donnees_data['used_memory'],
+            donnees_data['memory_usage'],
+            donnees_data['cache'],
+            donnees_data['swap_total'],
+            donnees_data['swap_used'],
+            donnees_data['swap_percentage'],
+            donnees_data['used_disk'],
+            donnees_data['disk_percentage'],
+            json.dumps(donnees_data['cpu_usage_per_core']),
+            donnees_data['net_bandwidth']['bytes_sent'],
+            donnees_data['net_bandwidth']['bytes_recv'],
+            json.dumps(donnees_data['active_processes'])
+        ))
+        connection.commit()
+        print("\n\n ===========================\n\n Données insérées dans la base de données\n\n =====================================\n\n")
+    except Error as e:
+        print(f"Erreur lors de l'insertion des données: {e}")
 
 def handle_client_connection(connection, client_socket):
     buffer = ""
@@ -88,11 +92,16 @@ def handle_client_connection(connection, client_socket):
             try:
                 system_info = json.loads(message)
                 print(system_info)
-                if 'initial_info' in system_info and not machine_id:
+                if 'initial_info' in system_info and machine_id is None:
                     machine_id = insert_machine_data(connection, system_info['initial_info'])
-                if 'system_load' in system_info  and 'machine_mac' in system_info:
-                    insert_donnees_data(connection, system_info['machine_mac'], system_info['system_load'])
-                    print("\n\n ===========================\n\n Données insérées dans la base de données\n\n =====================================\n\n")
+                    if machine_id:
+                        print(f"Machine ID: {machine_id}")
+                    else:
+                        print("Erreur lors de l'insertion de la machine")
+                if 'system_load' in system_info and machine_id:
+                    insert_donnees_data(connection, machine_id, system_info['system_load'])
+                else:
+                    print("\n\n ===========================\n\n Données non insérées dans la base de données {}\n\n =====================================\n\n".format(machine_id))
             except json.JSONDecodeError as e:
                 print(f"Erreur de décodage JSON: {e}")
 

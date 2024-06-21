@@ -5,8 +5,30 @@ from django.contrib.contenttypes.models import ContentType
 from .models import MyPermission
 from django.contrib.auth.hashers import make_password
 
+class MachineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Machine
+        fields = '__all__'
 
+class MachineDataSerializer(serializers.ModelSerializer):
+    data = serializers.SerializerMethodField()
+    class Meta:
+        model = Machine
+        fields = '__all__'
 
+    
+    def get_data(self, obj):
+        return obj.data_set
+
+class MachineVariableDataSerializer(serializers.ModelSerializer):
+    variableData = serializers.SerializerMethodField()
+    class Meta:
+        model = VariableData
+        fields = '__all__'
+
+    
+    def get_variableData(self, obj):
+        return obj.variableData_set
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

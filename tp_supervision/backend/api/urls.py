@@ -31,4 +31,13 @@ urlpatterns = [
     path('groups/<str:token>/', group_list_view, name='group-list'),
     path('users/<int:user_id>/permissions/<int:permission_id>/<str:token>/', disable_permission_for_user, name='disable_permission_for_user'),
     path('groups/<int:group_id>/permissions/<int:permission_id>/<str:token>/', disable_permission_in_group, name='disable_permission_in_group'),
+
+
+
+    path('machines/<str:token>/', views.machine_list, name='machine-list'),
+    path('machines/<int:pk>/<str:token>/', views.machine_detail, name='machine-detail'),
+    # path('data/<str:token>/', views.data_list, name='data-list'),
+    # path('data/<int:pk>/<str:token>/', views.data_detail, name='data-detail'),
+    path('variabledata/<int:pk>/<str:token>/', views.variable_data_list, name='variabledata-list'),
+    # path('variabledata/<int:pk>/', views.variable_data_detail, name='variabledata-detail'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

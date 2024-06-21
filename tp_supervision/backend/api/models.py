@@ -50,3 +50,63 @@ class MyUserGroup(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)      
 
+
+
+
+
+import json
+
+class Machine(models.Model):
+    machine_type = models.CharField(max_length=50)
+    mac_address = models.CharField(max_length=17, unique=True)
+    system = models.CharField(max_length=50)
+    node_name = models.CharField(max_length=100)
+    machine_architecture = models.CharField(max_length=20)
+    processor = models.CharField(max_length=100)
+    cores = models.IntegerField()
+    logical_cores = models.IntegerField()
+    cpu_frequency = models.FloatField()
+    total_memory = models.BigIntegerField()
+    total_disk = models.BigIntegerField()
+    version = models.CharField(max_length=100)
+    releases = models.CharField(max_length=200)
+    collected_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.mac_address
+
+
+class Data(models.Model):
+    machine = models.ForeignKey(Machine, on_delete=models.CASCADE)
+    used_memory = models.BigIntegerField()
+    memory_percentage = models.FloatField()
+    cached_memory = models.BigIntegerField()
+    swap_total = models.BigIntegerField()
+    swap_used = models.BigIntegerField()
+    swap_percentage = models.FloatField()
+    used_disk = models.BigIntegerField()
+    disk_percentage = models.FloatField()
+    cpu_load_per_core = models.JSONField()
+    net_bytes_sent = models.BigIntegerField()
+    net_bytes_recv = models.BigIntegerField()
+    active_processes = models.IntegerField()
+    gpu_usage_percentage = models.FloatField()
+    cpu_temperature = models.FloatField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    collected_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.machine.mac_address} - {self.collected_at}"
+
+
+class VariableData(models.Model):
+    mac_address = models.CharField(max_length=17)
+    battery_percentage = models.FloatField()
+    uptime = models.BigIntegerField()
+    boot_time = models.DateTimeField()
+    shutdown_time = models.DateTimeField(null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    collected_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.mac_address} - {self.collected_at}"

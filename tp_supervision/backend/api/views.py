@@ -4,10 +4,11 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.authtoken.models import Token
-from .models import Userapp
+from .models import Data, Machine, MyPermission, Userapp, UserappPermissions, VariableData
 from rest_framework import status
 from django.contrib.auth.hashers import check_password
-from .serializers import UserSerializer
+from django.shortcuts import get_object_or_404
+from .serializers import  MachineDataSerializer, MachineSerializer, MachineVariableDataSerializer, UserSerializer
 from django.contrib.auth.hashers import make_password
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
@@ -361,3 +362,63 @@ def register_admin(request):
         user = serializer.save()
         return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
     return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+
+
+
+
+
+
+@api_view(['GET'])
+def machine_list(request, token):
+    try:
+        token_obj = Token.objects.get(key=token)
+        user = token_obj.user
+    except Token.DoesNotExist:
+        return JsonResponse({"error": "Invalid token"}, status=404)
+
+    # Vérifier si l'utilisateur est authentifié
+    if not user.is_authenticated:
+        return Response({'error': 'User must be logged in'}, status=403)
+    machines = Machine.objects.all()
+    serializer = MachineSerializer(machines, many=True)
+    return JsonResponse(serializer.data, safe=False)
+
+@api_view(['GET'])
+def machine_detail(request, pk, token):
+    try:
+        token_obj = Token.objects.get(key=token)
+        user = token_obj.user
+    except Token.DoesNotExist:
+        return JsonResponse({"error": "Invalid token"}, status=404)
+
+    # Vérifier si l'utilisateur est authentifié
+    if not user.is_authenticated:
+        return Response({'error': 'User must be logged in'}, status=403)
+    machine = get_object_or_404(Machine, pk=pk)
+    serializer = MachineDataSerializer(machine)
+    variable_data = MachineVariableDataSerializer(machine)
+    return JsonResponse({"data":serializer.data, "variable_data":variable_data.data})
+
+
+
+@api_view(['GET'])
+def variable_data_list(request, pk, token):
+    try:
+        token_obj = Token.objects.get(key=token)
+        user = token_obj.user
+    except Token.DoesNotExist:
+        return JsonResponse({"error": "Invalid token"}, status=404)
+
+    # Vérifier si l'utilisateur est authentifié
+    if not user.is_authenticated:
+        return Response({'error': 'User must be logged in'}, status=403)
+    machine = get_object_or_404(Machine, pk=pk)
+    serializer = MachineVariableDataSerializer(machine)
+    return JsonResponse(serializer.data, safe=False)
+

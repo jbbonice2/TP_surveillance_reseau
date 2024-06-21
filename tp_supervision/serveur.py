@@ -134,7 +134,8 @@
 
 # if __name__ == "__main__":
 #     start_server()
-
+  
+# timestamp TIMESTAMP DEFAULT current_timestamp,
 
 
 import socket
@@ -156,6 +157,78 @@ def create_connection():
     except Error as e:
         print(f"Erreur '{e}'")
     return connection
+
+# Fonction pour créer les tables si elles n'existent pas
+def create_tables(connection):
+    cursor = connection.cursor()
+    
+    # Création de la table Machine
+    create_table_machine = """
+    CREATE TABLE IF NOT EXISTS Machine (
+        id SERIAL PRIMARY KEY,
+        machine_type VARCHAR(50),
+        mac_address VARCHAR(17) UNIQUE,
+        system VARCHAR(50),
+        node_name VARCHAR(100),
+        machine_architecture VARCHAR(20),
+        processor VARCHAR(100),
+        cores INT,
+        logical_cores INT,
+        cpu_frequency FLOAT,
+        total_memory BIGINT,
+        total_disk BIGINT,
+        version VARCHAR(100) NOT NULL,
+        releases VARCHAR(200) NOT NULL,
+        collected_at TIMESTAMP NOT NULL DEFAULT current_timestamp
+    );
+    """
+    
+    # Création de la table Data
+    create_table_data = """
+    CREATE TABLE IF NOT EXISTS Data (
+        id SERIAL PRIMARY KEY,
+        machine_id INT REFERENCES Machine(id) ON DELETE CASCADE ON UPDATE CASCADE,
+        used_memory BIGINT,
+        memory_percentage FLOAT,
+        cached_memory BIGINT,
+        swap_total BIGINT,
+        swap_used BIGINT,
+        swap_percentage FLOAT,
+        used_disk BIGINT,
+        disk_percentage FLOAT,
+        cpu_load_per_core JSONB,
+        net_bytes_sent BIGINT,
+        net_bytes_recv BIGINT,
+        active_processes INT,
+        gpu_usage_percentage FLOAT,
+        cpu_temperature FLOAT,
+        timestamp TIMESTAMP DEFAULT current_timestamp,
+        collected_at TIMESTAMP NOT NULL DEFAULT current_timestamp
+    );
+    """
+    
+    # Création de la table VariableData
+    create_table_variable_data = """
+    CREATE TABLE IF NOT EXISTS VariableData (
+        id SERIAL PRIMARY KEY,
+        mac_address VARCHAR(17) NOT NULL,
+        battery_percentage FLOAT NOT NULL,
+        uptime BIGINT NOT NULL,
+        boot_time TIMESTAMP NOT NULL,
+        shutdown_time TIMESTAMP,
+        timestamp TIMESTAMP DEFAULT current_timestamp,
+        collected_at TIMESTAMP NOT NULL DEFAULT current_timestamp
+    );
+    """
+    
+    try:
+        cursor.execute(create_table_machine)
+        cursor.execute(create_table_data)
+        cursor.execute(create_table_variable_data)
+        connection.commit()
+        print("Tables créées ou existent déjà")
+    except Error as e:
+        print(f"Erreur lors de la création des tables: {e}")
 
 # Fonction pour insérer les données de la machine dans la table Machine
 def insert_machine_data(connection, machine_data):
@@ -194,13 +267,13 @@ def insert_machine_data(connection, machine_data):
     machine_id = cursor.fetchone()[0]
     return machine_id
 
-# Fonction pour insérer les données dans la table Donnees
-def insert_donnees_data(connection, donnees_data):
+# Fonction pour insérer les données dans la table Data
+def insert_data(connection, data):
     cursor = connection.cursor()
     
     # Vérifier si la machine existe déjà
     query_check = "SELECT id FROM Machine WHERE mac_address = %s"
-    cursor.execute(query_check, (donnees_data['mac_address'],))
+    cursor.execute(query_check, (data['mac_address'],))
     result = cursor.fetchone()
     
     if result:
@@ -210,29 +283,54 @@ def insert_donnees_data(connection, donnees_data):
         return
 
     query = """
-    INSERT INTO Donnees (machine_id, used_memory, memory_percentage, cached_memory, swap_total, swap_used, swap_percentage, used_disk, disk_percentage, cpu_load_per_core, net_bytes_sent, net_bytes_recv, active_processes)
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    INSERT INTO Data (machine_id, used_memory, memory_percentage, cached_memory, swap_total, swap_used, swap_percentage, used_disk, disk_percentage, cpu_load_per_core, net_bytes_sent, net_bytes_recv, active_processes, gpu_usage_percentage, cpu_temperature, collected_at)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
     try:
         cursor.execute(query, (
             machine_id,
-            donnees_data['used_memory'],
-            donnees_data['memory_usage'],
-            donnees_data['cache'],
-            donnees_data['swap_total'],
-            donnees_data['swap_used'],
-            donnees_data['swap_percentage'],
-            donnees_data['used_disk'],
-            donnees_data['disk_percentage'],
-            json.dumps(donnees_data['cpu_usage_per_core']),
-            donnees_data['net_bandwidth']['bytes_sent'],
-            donnees_data['net_bandwidth']['bytes_recv'],
-            json.dumps(donnees_data['active_processes'])
+            data['used_memory'],
+            data['memory_usage'],
+            data['cache'],
+            data['swap_total'],
+            data['swap_used'],
+            data['swap_percentage'],
+            data['used_disk'],
+            data['disk_percentage'],
+            json.dumps(data['cpu_usage_per_core']),
+            data['net_bandwidth']['bytes_sent'],
+            data['net_bandwidth']['bytes_recv'],
+            data['active_processes'],
+            data['gpu_usage_percentage'],
+            data['cpu_temperature'],
+            data['timestamp']
         ))
         connection.commit()
         print("Données insérées dans la base de données")
     except Error as e:
         print(f"Erreur lors de l'insertion des données: {e}")
+
+# Fonction pour insérer les données variables dans la table VariableData
+def insert_variable_data(connection, variable_data):
+    cursor = connection.cursor()
+    
+    query = """
+    INSERT INTO VariableData (mac_address, battery_percentage, uptime, boot_time, shutdown_time, collected_at)
+    VALUES (%s, %s, %s, %s, %s, %s)
+    """
+    try:
+        cursor.execute(query, (
+            variable_data['mac_address'],
+            variable_data['battery_percentage'],
+            variable_data['uptime'],
+            variable_data['boot_time'],
+            variable_data['shutdown_time'],
+            variable_data['timestamp']
+        ))
+        connection.commit()
+        print("Données variables insérées dans la base de données")
+    except Error as e:
+        print(f"Erreur lors de l'insertion des données variables: {e}")
 
 # Fonction pour gérer la connexion client
 def handle_client_connection(connection, client_socket):
@@ -252,7 +350,9 @@ def handle_client_connection(connection, client_socket):
                         if 'initial_info' in item:
                             insert_machine_data(connection, item['initial_info'])
                         if 'system_load' in item:
-                            insert_donnees_data(connection, item['system_load'])
+                            insert_data(connection, item['system_load'])
+                        if 'variable_data' in item:
+                            insert_variable_data(connection, item['variable_data'])
                 else:
                     print(f"Structure de message inattendue: {system_info}")
             except json.JSONDecodeError as e:
@@ -266,6 +366,7 @@ def start_server():
     print("Serveur en attente de connexions...")
 
     connection = create_connection()
+    create_tables(connection)
 
     while True:
         client_socket, client_address = server_socket.accept()

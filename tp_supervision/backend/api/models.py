@@ -70,6 +70,7 @@ class Machine(models.Model):
     total_disk = models.BigIntegerField()
     version = models.CharField(max_length=100)
     releases = models.CharField(max_length=200)
+    timestamp = models.DateTimeField(auto_now=True)
     collected_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

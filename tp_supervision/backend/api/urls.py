@@ -20,17 +20,7 @@ urlpatterns = [
     path('users/<int:user_id>/<str:token>/', user_detail_view, name='user_detail'),
     path('users/<int:user_id>/permissions/<int:permission_id>/<str:token>/', add_permission_to_user, name='add_permission_to_user'),
 
-    path('groups/<int:id>/<str:token>/', delete_group, name='delete-group'),
-    path('groups/<int:id>/<str:token>/', update_group, name='update-group'),
-    path('groups/<int:group_id>/permissions/<str:token>/', set_group_permissions, name='set-group-permissions'),
-    path('groups/<int:group_id>/users/<str:token>/', set_users_in_group, name='set-users-in-group'),
-    path('groups/<int:group_id>/users/<int:user_id>/<str:token>/', add_user_to_group, name='add-user-to-group'),
-    path('groups/<str:token>/', create_group, name='create-group'),
-    path('groups/<int:group_id>/<str:token>/', group_detail_view, name='group-detail'),
-    path('users/<int:user_id>/groups/<int:group_id>/<str:token>/', remove_user_from_group, name='remove_user_from_group'),
-    path('groups/<str:token>/', group_list_view, name='group-list'),
-    path('users/<int:user_id>/permissions/<int:permission_id>/<str:token>/', disable_permission_for_user, name='disable_permission_for_user'),
-    path('groups/<int:group_id>/permissions/<int:permission_id>/<str:token>/', disable_permission_in_group, name='disable_permission_in_group'),
+  
 
 
 

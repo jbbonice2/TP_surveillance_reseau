@@ -1,0 +1,23 @@
+.App {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+  }
+  
+  .machine-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    justify-items: center; /* Aligne horizontalement le contenu au centre */
+    align-items: center;
+  }
+  
+  .machine-details > div {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  }
+  .container > div:not(:last-child) {
+    padding-bottom: 1rem; /* Ajustez la valeur selon vos besoins */
+  }
+  

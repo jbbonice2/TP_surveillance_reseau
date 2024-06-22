@@ -206,7 +206,7 @@ from datetime import datetime
 import subprocess
 
 # Adresse IP et port du serveur
-SERVER_HOST = '192.168.1.121'#192.168.182.52
+SERVER_HOST = '192.168.244.43'#192.168.182.52
 SERVER_PORT = 12345
 DATA_DIR = "data"
 

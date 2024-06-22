@@ -138,6 +138,7 @@
 # timestamp TIMESTAMP DEFAULT current_timestamp,
 
 
+from datetime import datetime
 import socket
 import json
 import psycopg2
@@ -162,9 +163,9 @@ def create_connection():
 def create_tables(connection):
     cursor = connection.cursor()
     
-    # Création de la table Machine
+    # Création de la table api_machine
     create_table_machine = """
-    CREATE TABLE IF NOT EXISTS Machine (
+    CREATE TABLE IF NOT EXISTS api_machine (
         id SERIAL PRIMARY KEY,
         machine_type VARCHAR(50),
         mac_address VARCHAR(17) UNIQUE,
@@ -183,9 +184,9 @@ def create_tables(connection):
     );
     """
     
-    # Création de la table Data
+    # Création de la table api_data
     create_table_data = """
-    CREATE TABLE IF NOT EXISTS Data (
+    CREATE TABLE IF NOT EXISTS api_data (
         id SERIAL PRIMARY KEY,
         machine_id INT REFERENCES Machine(id) ON DELETE CASCADE ON UPDATE CASCADE,
         used_memory BIGINT,
@@ -207,9 +208,9 @@ def create_tables(connection):
     );
     """
     
-    # Création de la table VariableData
+    # Création de la table api_variabledata
     create_table_variable_data = """
-    CREATE TABLE IF NOT EXISTS VariableData (
+    CREATE TABLE IF NOT EXISTS api_variabledata (
         id SERIAL PRIMARY KEY,
         mac_address VARCHAR(17) NOT NULL,
         battery_percentage FLOAT NOT NULL,
@@ -230,12 +231,12 @@ def create_tables(connection):
     except Error as e:
         print(f"Erreur lors de la création des tables: {e}")
 
-# Fonction pour insérer les données de la machine dans la table Machine
+# Fonction pour insérer les données de la machine dans la table api_machine
 def insert_machine_data(connection, machine_data):
     cursor = connection.cursor()
     
     # Vérifier si la machine existe déjà
-    query_check = "SELECT id FROM Machine WHERE mac_address = %s"
+    query_check = "SELECT id FROM api_machine WHERE mac_address = %s"
     cursor.execute(query_check, (machine_data['mac_address'],))
     result = cursor.fetchone()
     
@@ -244,8 +245,8 @@ def insert_machine_data(connection, machine_data):
     
     # Insérer une nouvelle machine si elle n'existe pas
     query_insert = """
-    INSERT INTO Machine (machine_type, mac_address, system, node_name, machine_architecture, processor, cores, logical_cores, cpu_frequency, total_memory, total_disk, version, releases)
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    INSERT INTO api_machine (machine_type, mac_address, system, node_name, machine_architecture, processor, cores, logical_cores, cpu_frequency, total_memory, total_disk, version, releases, collected_at, timestamp)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     RETURNING id
     """
     cursor.execute(query_insert, (
@@ -261,18 +262,20 @@ def insert_machine_data(connection, machine_data):
         machine_data['memory']['total_memory'],
         machine_data['disk']['total_disk'],
         machine_data['os']['version'],
-        machine_data['os']['release']
+        machine_data['os']['release'],
+        machine_data['timestamp'],
+        datetime.now().isoformat()
     ))
     connection.commit()
     machine_id = cursor.fetchone()[0]
     return machine_id
 
-# Fonction pour insérer les données dans la table Data
+# Fonction pour insérer les données dans la table api_machine
 def insert_data(connection, data):
     cursor = connection.cursor()
     
     # Vérifier si la machine existe déjà
-    query_check = "SELECT id FROM Machine WHERE mac_address = %s"
+    query_check = "SELECT id FROM api_machine WHERE mac_address = %s"
     cursor.execute(query_check, (data['mac_address'],))
     result = cursor.fetchone()
     
@@ -283,8 +286,8 @@ def insert_data(connection, data):
         return
 
     query = """
-    INSERT INTO Data (machine_id, used_memory, memory_percentage, cached_memory, swap_total, swap_used, swap_percentage, used_disk, disk_percentage, cpu_load_per_core, net_bytes_sent, net_bytes_recv, active_processes, gpu_usage_percentage, cpu_temperature, collected_at)
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    INSERT INTO api_data (machine_id, used_memory, memory_percentage, cached_memory, swap_total, swap_used, swap_percentage, used_disk, disk_percentage, cpu_load_per_core, net_bytes_sent, net_bytes_recv, active_processes, gpu_usage_percentage, cpu_temperature, collected_at,  timestamp)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
     try:
         cursor.execute(query, (
@@ -303,29 +306,42 @@ def insert_data(connection, data):
             data['active_processes'],
             data['gpu_usage_percentage'],
             data['cpu_temperature'],
-            data['timestamp']
+            data['timestamp'],
+            datetime.now().isoformat()
         ))
         connection.commit()
         print("Données insérées dans la base de données")
     except Error as e:
         print(f"Erreur lors de l'insertion des données: {e}")
 
-# Fonction pour insérer les données variables dans la table VariableData
+# Fonction pour insérer les données variables dans la table api_variabledata
 def insert_variable_data(connection, variable_data):
     cursor = connection.cursor()
     
+
+    query_check = "SELECT id FROM api_machine WHERE mac_address = %s"
+    cursor.execute(query_check, (variable_data['mac_address'],))
+    result = cursor.fetchone()
+    
+    if result:
+        machine_id = result[0]
+    else:
+        print("La machine n'existe pas dans la base de données")
+        return
     query = """
-    INSERT INTO VariableData (mac_address, battery_percentage, uptime, boot_time, shutdown_time, collected_at)
-    VALUES (%s, %s, %s, %s, %s, %s)
+    INSERT INTO api_variabledata (machine_id, mac_address, battery_percentage, uptime, boot_time, shutdown_time, collected_at, timestamp)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
     """
     try:
         cursor.execute(query, (
+            machine_id,
             variable_data['mac_address'],
             variable_data['battery_percentage'],
             variable_data['uptime'],
             variable_data['boot_time'],
             variable_data['shutdown_time'],
-            variable_data['timestamp']
+            variable_data['timestamp'],
+            datetime.now().isoformat()
         ))
         connection.commit()
         print("Données variables insérées dans la base de données")

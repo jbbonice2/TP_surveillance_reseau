@@ -206,7 +206,7 @@ from datetime import datetime
 import subprocess
 
 # Adresse IP et port du serveur
-SERVER_HOST = '192.168.182.52'
+SERVER_HOST = '192.168.1.121'#192.168.182.52
 SERVER_PORT = 12345
 DATA_DIR = "data"
 
@@ -323,7 +323,7 @@ def get_shutdown_time():
             print(f"Erreur lors de la récupération de l'heure d'arrêt: {e}")
             return None
 
-    return None
+    return -1
 
 def get_gpu_usage():
     # This function works for systems with NVIDIA GPUs and nvidia-smi installed
@@ -334,7 +334,7 @@ def get_gpu_usage():
     except Exception as e:
         print(f"Erreur lors de la récupération de l'utilisation du GPU: {e}")
     # Placeholder for other GPUs
-    return None
+    return -1
 
 
 def get_cpu_temperature():
@@ -414,7 +414,8 @@ def gather_initial_system_info():
         "os": get_os_info(),
         "machine_type": determine_machine_type(),
         "mac_address": get_mac_address(),
-        "screen_resolution": get_screen_resolution()
+        "screen_resolution": get_screen_resolution(),
+        "timestamp": datetime.now().isoformat()
     }
     return system_info
 

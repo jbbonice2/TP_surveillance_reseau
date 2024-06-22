@@ -100,6 +100,7 @@ class Data(models.Model):
 
 
 class VariableData(models.Model):
+    machine = models.ForeignKey(Machine, on_delete=models.CASCADE, default=1)
     mac_address = models.CharField(max_length=17)
     battery_percentage = models.FloatField()
     uptime = models.BigIntegerField()

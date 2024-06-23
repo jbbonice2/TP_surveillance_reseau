@@ -10,8 +10,9 @@ import { ProgressSpinner } from 'primereact/progressspinner';
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
+import Chart from 'react-apexcharts';
 
-const DetailMachine = () => {
+const DetailGraphMachine = () => {
   const { id } = useParams();
   const [machine, setMachine] = useState(null);
   const [variableData, setVariableData] = useState([]);
@@ -48,6 +49,111 @@ const DetailMachine = () => {
   if (!machine) {
     return <div><ProgressSpinner/></div>;
   }
+
+  const memoryOptions = {
+    chart: {
+      type: 'line',
+      height: 350
+    },
+    series: [{
+      name: 'Memory Usage',
+      data: variableData.map(data => data.memory_percentage)
+    }],
+    xaxis: {
+      categories: variableData.map(data => data.collected_at)
+    }
+  };
+
+  const swapOptions = {
+    chart: {
+      type: 'line',
+      height: 350
+    },
+    series: [{
+      name: 'Swap Usage',
+      data: variableData.map(data => data.swap_percentage)
+    }],
+    xaxis: {
+      categories: variableData.map(data => data.collected_at)
+    }
+  };
+
+  const diskOptions = {
+    chart: {
+      type: 'line',
+      height: 350
+    },
+    series: [{
+      name: 'Disk Usage',
+      data: variableData.map(data => data.disk_percentage)
+    }],
+    xaxis: {
+      categories: variableData.map(data => data.collected_at)
+    }
+  };
+
+  const networkOptions = {
+    chart: {
+      type: 'line',
+      height: 350
+    },
+    series: [
+      {
+        name: 'Net Bytes Sent',
+        data: variableData.map(data => data.net_bytes_sent)
+      },
+      {
+        name: 'Net Bytes Received',
+        data: variableData.map(data => data.net_bytes_recv)
+      }
+    ],
+    xaxis: {
+      categories: variableData.map(data => data.collected_at)
+    }
+  };
+
+  const getCpuLoadSeries = () => {
+    const series = [];
+    if (variableData.length > 0) {
+      const numCores = variableData[0].cpu_load_per_core.length;
+      for (let i = 0; i < numCores; i++) {
+        series.push({
+          name: `Core ${i + 1} Load`,
+          data: variableData.map(data => data.cpu_load_per_core[i])
+        });
+      }
+      series.push({
+        name: 'Average CPU Load',
+        data: variableData.map(data => data.cpu_load_per_core.reduce((a, b) => a + b, 0) / numCores)
+      });
+    }
+    return series;
+  };
+
+  const cpuOptions = {
+    chart: {
+      type: 'line',
+      height: 350
+    },
+    series: getCpuLoadSeries(),
+    xaxis: {
+      categories: variableData.map(data => data.collected_at)
+    }
+  };
+
+  const temperatureOptions = {
+    chart: {
+      type: 'line',
+      height: 350
+    },
+    series: [{
+      name: 'CPU Temperature',
+      data: variableData.map(data => data.cpu_temperature)
+    }],
+    xaxis: {
+      categories: variableData.map(data => data.collected_at)
+    }
+  };
 
   return (
     <>
@@ -90,20 +196,32 @@ const DetailMachine = () => {
         <section className="section">
           <div>
             <h1>Variable Data</h1>
-            <DataTable value={variableData} rowsPerPageOptions={[5, 10, 25, 50]} paginator rows={12} className="p-datatable-gridlines">
-              <Column field="id" header="ID" />
-              <Column field="used_memory" header="Used Memory" />
-              <Column field="memory_percentage" header="Memory Percentage" />
-              <Column field="swap_used" header="Swap Used" />
-              <Column field="disk_percentage" header="Disk Percentage" />
-              <Column field="cpu_load_per_core" header="CPU Load per Core" body={(rowData) => rowData.cpu_load_per_core.join(', ')} />
-              <Column field="net_bytes_sent" header="Net Bytes Sent" />
-              <Column field="net_bytes_recv" header="Net Bytes Received" />
-              <Column field="active_processes" header="Active Processes" />
-              <Column field="gpu_usage_percentage" header="GPU Usage Percentage" />
-              <Column field="cpu_temperature" header="CPU Temperature" />
-              <Column field="collected_at" header="Collected At" sortable />
-            </DataTable>
+            <div className="charts">
+              <div className="chart">
+                <h3>Memory Usage</h3>
+                <Chart options={memoryOptions} series={memoryOptions.series} type="line" height={350} />
+              </div>
+              <div className="chart">
+                <h3>Swap Usage</h3>
+                <Chart options={swapOptions} series={swapOptions.series} type="line" height={350} />
+              </div>
+              <div className="chart">
+                <h3>Disk Usage</h3>
+                <Chart options={diskOptions} series={diskOptions.series} type="line" height={350} />
+              </div>
+              <div className="chart">
+                <h3>Network Usage</h3>
+                <Chart options={networkOptions} series={networkOptions.series} type="line" height={350} />
+              </div>
+              <div className="chart">
+                <h3>CPU Load</h3>
+                <Chart options={cpuOptions} series={cpuOptions.series} type="line" height={350} />
+              </div>
+              <div className="chart">
+                <h3>CPU Temperature</h3>
+                <Chart options={temperatureOptions} series={temperatureOptions.series} type="line" height={350} />
+              </div>
+            </div>
           </div>
         </section>
       </main>
@@ -121,4 +239,4 @@ const DetailMachine = () => {
   );
 };
 
-export default DetailMachine;
+export default DetailGraphMachine;

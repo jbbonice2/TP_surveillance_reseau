@@ -8,6 +8,8 @@ import Group from './components/groups';
 import DetailMachine from './components/detailmachine';
 import Listemachine from './components/listemachine';
 import React from 'react';
+import VarMachine from './components/detailmachineTest';
+import DetailGraphMachine from './components/detailGraphmachine';
 
 
 
@@ -25,7 +27,9 @@ function App() {
             <Route path='/login' element={<Login/>} />
             <Route path='/profile' element={<Profile/>} />
             <Route path='/groups' element={<Group/>} />
+            <Route path='/test/:id' element={<VarMachine/>} />
             <Route path="/detailmachine/:id" element={<DetailMachine />} />
+            <Route path="/detailgraph/:id" element={<DetailGraphMachine />} />
             {/* <Route path='/profile/:id' element={<Profile/>} />  */}
             <Route path='*' element={<NotFound />} />
         </Routes>

@@ -11,7 +11,7 @@ import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 
-const DetailMachine = () => {
+const VarMachine = () => {
   const { id } = useParams();
   const [machine, setMachine] = useState(null);
   const [variableData, setVariableData] = useState([]);
@@ -29,9 +29,9 @@ const DetailMachine = () => {
     const fetchData = async () => {
       const token = sessionStorage.getItem('token');
       try {
-        const response = await axios.get(`http://localhost:8000/machines/${id}/${token}/`);
+        const response = await axios.get(`http://localhost:8000/variabledata/${id}/${token}/`);
         setMachine(response.data); // Assuming data is an array with a single machine object
-        setVariableData(response.data.data);
+        setVariableData(response.data.variabledata_set        );
       } catch (error) {
         setError('Error fetching the machine details!');
         console.error(error);
@@ -91,18 +91,13 @@ const DetailMachine = () => {
           <div>
             <h1>Variable Data</h1>
             <DataTable value={variableData} rowsPerPageOptions={[5, 10, 25, 50]} paginator rows={12} className="p-datatable-gridlines">
-              <Column field="id" header="ID" />
-              <Column field="used_memory" header="Used Memory" />
-              <Column field="memory_percentage" header="Memory Percentage" />
-              <Column field="swap_used" header="Swap Used" />
-              <Column field="disk_percentage" header="Disk Percentage" />
-              <Column field="cpu_load_per_core" header="CPU Load per Core" body={(rowData) => rowData.cpu_load_per_core.join(', ')} />
-              <Column field="net_bytes_sent" header="Net Bytes Sent" />
-              <Column field="net_bytes_recv" header="Net Bytes Received" />
-              <Column field="active_processes" header="Active Processes" />
-              <Column field="gpu_usage_percentage" header="GPU Usage Percentage" />
-              <Column field="cpu_temperature" header="CPU Temperature" />
-              <Column field="collected_at" header="Collected At" sortable />
+              {/* <Column field="machine" header="Machine" body={(rowData) => rowData.machine.name} /> Assuming machine has a 'name' field */}
+              <Column field="mac_address" header="MAC Address" />
+              <Column field="battery_percentage" header="Battery Percentage" />
+              <Column field="uptime" header="Uptime" body={(rowData) => `${rowData.uptime} s`} />
+              <Column field="boot_time" header="Boot Time" body={(rowData) => new Date(rowData.boot_time).toLocaleString()} />
+              <Column field="shutdown_time" header="Shutdown Time" body={(rowData) => rowData.shutdown_time ? new Date(rowData.shutdown_time).toLocaleString() : 'N/A'} />
+              <Column field="collected_at" header="Collected At" body={(rowData) => new Date(rowData.collected_at).toLocaleString()} />
             </DataTable>
           </div>
         </section>
@@ -121,4 +116,4 @@ const DetailMachine = () => {
   );
 };
 
-export default DetailMachine;
+export default VarMachine;

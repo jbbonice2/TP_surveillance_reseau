@@ -86,9 +86,15 @@ const Listemachine = () => {
               <Column
                 header="Actions"
                 body={(rowData) => (
-                  <DropdownButton as={ButtonGroup} key="dropdown-basic-button" id={`dropdown-button-drop-${"down"}`}>
-                    <Dropdown.Item onClick={() => redirectToDetails(rowData.id)}>Caractéristiques</Dropdown.Item>
+                  <DropdownButton
+                    as={ButtonGroup}
+                    key="dropdown-basic-button"
+                    id={`dropdown-button-drop-${rowData.id}`} // Use rowData.id for unique ID
+                    title="Actions"
+                  >
+                    <Dropdown.Item onClick={() => redirectToDetails(rowData.id)}>details en table</Dropdown.Item>
                     <Dropdown.Item onClick={() => redirectToDetails(rowData.id)}>Charge</Dropdown.Item>
+                    <Dropdown.Item onClick={() => navigate(`/detailgraph/${rowData.id}`)}>Details en graphe</Dropdown.Item>
                   </DropdownButton>
                 )}
               />

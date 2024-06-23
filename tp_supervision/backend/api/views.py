@@ -217,11 +217,29 @@ from django.http import JsonResponse
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from .models import Machine, VariableData
-from .serializers import MachineVariableDataSerializer
+from .serializers import MachineVariableDataSerializer, MachineSerializer2
 from rest_framework.authtoken.models import Token
+
+
+# @api_view(['GET'])
+# def variable_data_list(request, pk, token):
+#     try:
+#         token_obj = Token.objects.get(key=token)
+#         user = token_obj.user
+#     except Token.DoesNotExist:
+#         return JsonResponse({"error": "Invalid token"}, status=status.HTTP_404_NOT_FOUND)
+
+#     if not user.is_authenticated:
+#         return Response({'error': 'User must be logged in'}, status=status.HTTP_403_FORBIDDEN)
+    
+#     machine = get_object_or_404(Machine, pk=pk)
+#     variable_data = VariableData.objects.filter(machine=machine)
+#     serializer = MachineVariableDataSerializer(variable_data, many=True)
+#     return Response(serializer.data, safe=False)
+
+
+
 @api_view(['GET'])
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
 def variable_data_list(request, pk, token):
     try:
         token_obj = Token.objects.get(key=token)
@@ -231,13 +249,10 @@ def variable_data_list(request, pk, token):
 
     if not user.is_authenticated:
         return Response({'error': 'User must be logged in'}, status=status.HTTP_403_FORBIDDEN)
-    
+
     machine = get_object_or_404(Machine, pk=pk)
-    variable_data = VariableData.objects.filter(machine=machine)
-    serializer = MachineVariableDataSerializer(variable_data, many=True)
-    return JsonResponse(serializer.data, safe=False)
-
-
+    serializer = MachineSerializer2(machine)
+    return Response(serializer.data)
 
 @api_view(['GET'])
 def machine_detail(request, pk, token):

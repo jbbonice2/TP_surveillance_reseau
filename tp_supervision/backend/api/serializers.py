@@ -32,6 +32,18 @@ class MachineVariableDataSerializer(serializers.ModelSerializer):
         return VariableData.objects.filter(machine=obj).values()
 
 
+class VariableDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VariableData
+        fields = '__all__'
+
+class MachineSerializer2(serializers.ModelSerializer):
+    variabledata_set = VariableDataSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Machine
+        fields = '__all__'
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Userapp

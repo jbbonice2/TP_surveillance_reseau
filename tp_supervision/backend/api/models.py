@@ -1,60 +1,27 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from datetime import datetime, timedelta
+from rest_framework import serializers
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth import authenticate
+from django.http import JsonResponse
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.authtoken.models import Token
+from django.shortcuts import get_object_or_404
+from rest_framework import status
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
+# Models
 class Userapp(AbstractUser):
-    username = models.CharField(unique=True,max_length=100)
+    username = models.CharField(unique=True, max_length=100)
     image = models.ImageField(upload_to='user_images', blank=True, null=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
+
     def __str__(self):
         return self.username
 
-class MyPermission(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, blank=True)
-    modified_at = models.DateTimeField(auto_now=True, blank=True)
-    active = models.BooleanField(default=True)
-
-
-    
-
-class MyGroup(models.Model):
-    code = models.CharField(max_length=100, unique=True)
-    label = models.CharField(max_length=100)
-    description = models.TextField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    modified_at = models.DateTimeField(auto_now=True)   
-    created_by = models.ForeignKey(Userapp, on_delete=models.CASCADE) 
-    active = models.BooleanField(default=True)
-
-    def __str__(self):
-        return self.label    
-
-class UserappPermissions(models.Model):
-    user = models.ForeignKey(Userapp, on_delete=models.CASCADE)
-    permission = models.ForeignKey(MyPermission, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    modified_at = models.DateTimeField(auto_now=True) 
-
-class MyGroupPermissions(models.Model):
-    group = models.ForeignKey(MyGroup, on_delete=models.CASCADE)
-    permission = models.ForeignKey(MyPermission, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    modified_at = models.DateTimeField(auto_now=True)     
-
-class MyUserGroup(models.Model):
-    user = models.ForeignKey(Userapp, on_delete=models.CASCADE)
-    group = models.ForeignKey(MyGroup, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    modified_at = models.DateTimeField(auto_now=True)      
-
-
-
-
-
-import json
 
 class Machine(models.Model):
     machine_type = models.CharField(max_length=50)
@@ -70,9 +37,7 @@ class Machine(models.Model):
     total_disk = models.BigIntegerField()
     version = models.CharField(max_length=100)
     releases = models.CharField(max_length=200)
-    timestamp = models.DateTimeField(auto_now=True)
     collected_at = models.DateTimeField(auto_now_add=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.mac_address
@@ -94,7 +59,6 @@ class Data(models.Model):
     active_processes = models.IntegerField()
     gpu_usage_percentage = models.FloatField()
     cpu_temperature = models.FloatField()
-    timestamp = models.DateTimeField(auto_now_add=True)
     collected_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -102,14 +66,22 @@ class Data(models.Model):
 
 
 class VariableData(models.Model):
-    machine = models.ForeignKey(Machine, on_delete=models.CASCADE, default=1)
+    machine = models.ForeignKey(Machine, on_delete=models.CASCADE)
     mac_address = models.CharField(max_length=17)
     battery_percentage = models.FloatField()
     uptime = models.BigIntegerField()
     boot_time = models.DateTimeField()
     shutdown_time = models.DateTimeField(null=True, blank=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
     collected_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.mac_address} - {self.collected_at}"
+
+
+class MyGroup(models.Model):
+    # Définition des champs de votre modèle MyGroup
+    group_name = models.CharField(max_length=100)
+    # Autres champs ...
+
+    def __str__(self):
+        return self.group_name

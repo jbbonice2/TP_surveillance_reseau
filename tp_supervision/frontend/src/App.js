@@ -6,7 +6,7 @@ import Home from './components/home';
 import Profile from './components/profile';
 import Group from './components/groups';
 import DetailMachine from './components/detailmachine';
-import Listemachine from './components/home';
+import Listemachine from './components/listemachine';
 import React from 'react';
 
 
@@ -20,7 +20,7 @@ function App() {
       <BrowserRouter>
         <Routes>
             <Route index element={<Listemachine />} />
-            <Route path='/Home' element={<Home/>}/>
+            <Route path='/listemachine' element={<Listemachine/>}/>
             <Route path='/register' element={<Register/>} />
             <Route path='/login' element={<Login/>} />
             <Route path='/profile' element={<Profile/>} />

@@ -26,8 +26,8 @@ const DetailMachine = () => {
       const token = sessionStorage.getItem('token');
       try {
         const response = await axios.get(`http://localhost:8000/machines/${id}/${token}/`);
-        setMachine(response.data.data);
-        setVariableData(response.data.variable_data);
+        setMachine(response.data); // Assuming data is an array with a single machine object
+        setVariableData(response.data.data);
       } catch (error) {
         setError('Error fetching the machine details!');
         console.error(error);
@@ -60,12 +60,11 @@ const DetailMachine = () => {
             </ol>
           </nav>
         </div>
-        {/* <!-- End Page Title --> */}
   
         <section className="section">
           <div>
             <h1>Caractéristiques de la machine</h1>
-            <div style={{ marginBottom: '2rem' }}></div> {/* Ajout de l'espace vide */}
+            <div style={{ marginBottom: '2rem' }}></div>
             <DataTable value={[machine]}>
               <Column field="node_name" header="Node Name" />
               <Column field="machine_type" header="Type" />
@@ -83,22 +82,28 @@ const DetailMachine = () => {
             </DataTable>
           </div>
         </section>
+        
         <section className="section">
           <div>
             <h1>Variable Data</h1>
             <DataTable value={variableData}>
-              {/* Ajoutez les colonnes nécessaires pour variableData ici */}
-              {/* Par exemple, si variableData contient des objets avec des champs name et value: */}
-              <Column field="name" header="Name" />
-              <Column field="value" header="Value" />
+              <Column field="id" header="ID" />
+              <Column field="used_memory" header="Used Memory" />
+              <Column field="memory_percentage" header="Memory Percentage" />
+              <Column field="swap_used" header="Swap Used" />
+              <Column field="disk_percentage" header="Disk Percentage" />
+              <Column field="cpu_load_per_core" header="CPU Load per Core" body={(rowData) => rowData.cpu_load_per_core.join(', ')} />
+              <Column field="net_bytes_sent" header="Net Bytes Sent" />
+              <Column field="net_bytes_recv" header="Net Bytes Received" />
+              <Column field="active_processes" header="Active Processes" />
+              <Column field="gpu_usage_percentage" header="GPU Usage Percentage" />
+              <Column field="cpu_temperature" header="CPU Temperature" />
+              <Column field="collected_at" header="Collected At" />
             </DataTable>
           </div>
         </section>
       </main>
     
-      {/* !-- End #main --> */}
-
-      {/* <!-- ======= Footer ======= --> */}
       <footer id="footer" className="footer">
         <div className="copyright">
           &copy; Copyright <strong><span>NiceAdmin</span></strong>. All Rights Reserved

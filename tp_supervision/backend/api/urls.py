@@ -9,16 +9,16 @@ from .views import *
 
 urlpatterns = [
     path('users/registera/', register_admin, name='register_admin'),
-    path('users/register/<str:token>/', register_user, name='register_user'),
-    path('users/<int:user_id>/permissions/<str:token>/', set_user_permissions, name='set_user_permissions'),
-    path('users/<str:token>/', user_list_view, name='user_list'),
-    path('users/<int:id>/<str:token>/', update_user, name='update_user'),
-    path('users/user_delete/<str:token>/', views.delete_user, name='user_info'),
-    path('users/change_password/<str:token>/', views.change_password, name='user_info'),
+   # path('users/register/<str:token>/', register_user, name='register_user'),
+    #path('users/<int:user_id>/permissions/<str:token>/', set_user_permissions, name='set_user_permissions'),
+   # path('users/<str:token>/', user_list_view, name='user_list'),
+   # path('users/<int:id>/<str:token>/', update_user, name='update_user'),
+    #path('users/user_delete/<str:token>/', views.delete_user, name='user_info'),
+    #path('users/change_password/<str:token>/', views.change_password, name='user_info'),
     path('users/login', login_user, name='login_user'),
     path('users/logout/', logout_user, name='logout_user'),
     path('users/<int:user_id>/<str:token>/', user_detail_view, name='user_detail'),
-    path('users/<int:user_id>/permissions/<int:permission_id>/<str:token>/', add_permission_to_user, name='add_permission_to_user'),
+   # path('users/<int:user_id>/permissions/<int:permission_id>/<str:token>/', add_permission_to_user, name='add_permission_to_user'),
 
   
 

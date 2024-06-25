@@ -205,8 +205,10 @@ import psutil
 from datetime import datetime
 import subprocess
 
+import requests
+
 # Adresse IP et port du serveur
-SERVER_HOST = '192.168.244.43'#192.168.182.52
+SERVER_HOST = '192.168.182.52'#192.168.244.43
 SERVER_PORT = 12345
 DATA_DIR = "data"
 
@@ -294,6 +296,14 @@ def get_uptime():
 def get_boot_time():
     return datetime.fromtimestamp(psutil.boot_time()).isoformat()
 
+
+def est_connecte_internet(url='http://www.google.com/', timeout=5):
+    try:
+        response = requests.get(url, timeout=timeout)
+        return True if response.status_code == 200 else False
+    except requests.ConnectionError:
+        return False
+
 def get_shutdown_time():
     if platform.system() == 'Windows':
         try:
@@ -370,6 +380,7 @@ def get_screen_resolution():
     return "N/A"
 
 def get_system_load():
+    internet_enabled = est_connecte_internet()
     cpu_load_per_core = psutil.cpu_percent(interval=1, percpu=True)
     memory_info = psutil.virtual_memory()
     swap_info = psutil.swap_memory()
@@ -394,7 +405,8 @@ def get_system_load():
         },
         "gpu_usage_percentage": gpu_usage,
         "cpu_temperature": cpu_temp,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
+        'internet_enabled' : internet_enabled
     }
 
 def get_active_processes_info():

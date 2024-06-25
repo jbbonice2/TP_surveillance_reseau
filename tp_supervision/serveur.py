@@ -204,6 +204,7 @@ def create_tables(connection):
         gpu_usage_percentage FLOAT,
         cpu_temperature FLOAT,
         timestamp TIMESTAMP DEFAULT current_timestamp,
+        internet_enabled BOOLEAN DEFAULT FALSE,
         collected_at TIMESTAMP NOT NULL DEFAULT current_timestamp
     );
     """
@@ -218,6 +219,7 @@ def create_tables(connection):
         boot_time TIMESTAMP NOT NULL,
         shutdown_time TIMESTAMP,
         timestamp TIMESTAMP DEFAULT current_timestamp,
+        ip VARCHAR(17),
         collected_at TIMESTAMP NOT NULL DEFAULT current_timestamp
     );
     """
@@ -286,8 +288,8 @@ def insert_data(connection, data):
         return
 
     query = """
-    INSERT INTO api_data (machine_id, used_memory, memory_percentage, cached_memory, swap_total, swap_used, swap_percentage, used_disk, disk_percentage, cpu_load_per_core, net_bytes_sent, net_bytes_recv, active_processes, gpu_usage_percentage, cpu_temperature, collected_at,  timestamp)
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    INSERT INTO api_data (machine_id, used_memory, memory_percentage, cached_memory, swap_total, swap_used, swap_percentage, used_disk, disk_percentage, cpu_load_per_core, net_bytes_sent, net_bytes_recv, active_processes, gpu_usage_percentage, cpu_temperature, collected_at,  timestamp, internet_enabled)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
     try:
         cursor.execute(query, (
@@ -307,7 +309,8 @@ def insert_data(connection, data):
             data['gpu_usage_percentage'],
             data['cpu_temperature'],
             data['timestamp'],
-            datetime.now().isoformat()
+            datetime.now().isoformat(),
+            data['internet_enabled']            
         ))
         connection.commit()
         print("Données insérées dans la base de données")
@@ -329,8 +332,8 @@ def insert_variable_data(connection, variable_data):
         print("La machine n'existe pas dans la base de données")
         return
     query = """
-    INSERT INTO api_variabledata (machine_id, mac_address, battery_percentage, uptime, boot_time, shutdown_time, collected_at, timestamp)
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    INSERT INTO api_variabledata (machine_id, mac_address, battery_percentage, uptime, boot_time, shutdown_time, collected_at, timestamp, ip)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
     try:
         cursor.execute(query, (
@@ -341,7 +344,8 @@ def insert_variable_data(connection, variable_data):
             variable_data['boot_time'],
             variable_data['shutdown_time'],
             variable_data['timestamp'],
-            datetime.now().isoformat()
+            datetime.now().isoformat(),
+            variable_data['ip'][0]
         ))
         connection.commit()
         print("Données variables insérées dans la base de données")
@@ -349,7 +353,7 @@ def insert_variable_data(connection, variable_data):
         print(f"Erreur lors de l'insertion des données variables: {e}")
 
 # Fonction pour gérer la connexion client
-def handle_client_connection(connection, client_socket):
+def handle_client_connection(connection, client_socket, client_address):
     buffer = ""
     while True:
         data = client_socket.recv(4096).decode('utf-8')
@@ -366,8 +370,10 @@ def handle_client_connection(connection, client_socket):
                         if 'initial_info' in item:
                             insert_machine_data(connection, item['initial_info'])
                         if 'system_load' in item:
+                            item['system_load']['ip'] = client_address
                             insert_data(connection, item['system_load'])
                         if 'variable_data' in item:
+                            item['variable_data']['ip'] = client_address
                             insert_variable_data(connection, item['variable_data'])
                 else:
                     print(f"Structure de message inattendue: {system_info}")
@@ -387,7 +393,7 @@ def start_server():
     while True:
         client_socket, client_address = server_socket.accept()
         print(f"Connexion établie avec {client_address}")
-        handle_client_connection(connection, client_socket)
+        handle_client_connection(connection, client_socket, client_address)
         client_socket.close()
 
 if __name__ == "__main__":

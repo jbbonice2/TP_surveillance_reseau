@@ -38,6 +38,7 @@ class Machine(models.Model):
     version = models.CharField(max_length=100)
     releases = models.CharField(max_length=200)
     collected_at = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.mac_address
@@ -60,6 +61,8 @@ class Data(models.Model):
     gpu_usage_percentage = models.FloatField()
     cpu_temperature = models.FloatField()
     collected_at = models.DateTimeField(auto_now=True)
+    timestamp = models.DateTimeField(auto_now=True)
+    internet_enabled = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.machine.mac_address} - {self.collected_at}"
@@ -73,6 +76,8 @@ class VariableData(models.Model):
     boot_time = models.DateTimeField()
     shutdown_time = models.DateTimeField(null=True, blank=True)
     collected_at = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now=True)
+    ip = models.CharField(max_length=17, null=True, blank=True)
 
     def __str__(self):
         return f"{self.mac_address} - {self.collected_at}"

@@ -51,7 +51,7 @@ const DetailGraphMachine = () => {
   const netSentData = variableData.map(d => d.net_bytes_sent);
   const netRecvData = variableData.map(d => d.net_bytes_recv);
   const cpuTempData = variableData.map(d => d.cpu_temperature);
-  const timestamps = variableData.map(d => d.collected_at);
+  const timestamps = variableData.map(d => new Date(d.collected_at));
 
   // Configurations for ApexCharts
   const memoryChartOptions = {
@@ -142,6 +142,9 @@ const DetailGraphMachine = () => {
     chart: {
       type: 'line',
       height: 350
+    },
+    stroke:{
+      curve:'smooth',
     },
     xaxis: {
       categories: timestamps

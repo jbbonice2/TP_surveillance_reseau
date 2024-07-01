@@ -336,13 +336,15 @@ def insert_variable_data(connection, variable_data):
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
     try:
+        shutdown_time = datetime.now().isoformat() if variable_data['shutdown_time'] == -1 else variable_data['shutdown_time']
+
         cursor.execute(query, (
             machine_id,
             variable_data['mac_address'],
             variable_data['battery_percentage'],
             variable_data['uptime'],
             variable_data['boot_time'],
-            variable_data['shutdown_time'],
+            shutdown_time,  
             variable_data['timestamp'],
             datetime.now().isoformat(),
             variable_data['ip'][0]

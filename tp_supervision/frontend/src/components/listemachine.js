@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+import { InputText } from 'primereact/inputtext';
 import { DropdownButton, Dropdown, ButtonGroup } from 'react-bootstrap';
 import SideBar from "../patials/sidebar";
 import NavBar from "../patials/navbar";
@@ -13,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 
 const Listemachine = () => {
   const [machines, setMachines] = useState([]);
+  const [globalFilter, setGlobalFilter] = useState(null);
   const navigate = useNavigate(); // Utilisation de useNavigate pour la navigation
 
   const formatMemory = (bytes) => {
@@ -46,10 +48,31 @@ const Listemachine = () => {
     fetchMachines();
   }, []);
 
+  const indexTemplate = (rowData, options) => {
+    return options.rowIndex + 1;
+  };
+
   // Fonction pour gérer la redirection vers la page de détails
   const redirectToDetails = (id) => {
     navigate(`/detailmachine/${id}`);
   };
+
+  const renderHeader = () => {
+    return (
+      <div className="table-header">
+        <span className="p-input-icon-left">
+          <i className="pi pi-search" />
+          <InputText
+            type="search"
+            onInput={(e) => setGlobalFilter(e.target.value)}
+            placeholder="Recherche globale"
+          />
+        </span>
+      </div>
+    );
+  };
+
+  const header = renderHeader();
 
   return (
     <>
@@ -57,7 +80,7 @@ const Listemachine = () => {
       <SideBar />
       <main id="main" className="main">
         <div className="pagetitle">
-          <h1>Machines</h1>
+          <h1>Machines enregistrées</h1>
           <nav>
             <ol className="breadcrumb">
               <li className="breadcrumb-item"><a href="index.html">Home</a></li>
@@ -68,8 +91,16 @@ const Listemachine = () => {
         </div>
         <section className="section">
           <div className="datatable-container">
-            <h2 className="datatable-title">Machines présentes dans le réseau</h2>
-            <DataTable value={machines} paginator rows={10} className="p-datatable-custom" header="Liste des machines">
+            <DataTable 
+              value={machines} 
+              paginator 
+              rowsPerPageOptions={[5, 10, 25, 50]} 
+              rows={10} 
+              className="p-datatable-custom" 
+              header={header}
+              globalFilter={globalFilter}
+            >
+              <Column body={indexTemplate} header="Num" sortable />
               <Column field="node_name" header="Node Name" sortable />
               <Column field="machine_type" header="Type" sortable />
               <Column field="mac_address" header="MAC Address" sortable />

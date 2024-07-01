@@ -41,6 +41,8 @@ const DetailMachine = () => {
     fetchData();
   }, [id]);
 
+  
+
   if (error) {
     return <div>{error}</div>;
   }
@@ -92,15 +94,16 @@ const DetailMachine = () => {
             <h1>Variable Data</h1>
             <DataTable value={variableData} rowsPerPageOptions={[5, 10, 25, 50]} paginator rows={12} className="p-datatable-gridlines">
               <Column field="id" header="ID" />
-              <Column field="used_memory" header="Used Memory" />
+              <Column field="used_memory" header="Used Memory" sortable  body={(rowData) => formatMemory(rowData.used_memory)}/>
               <Column field="memory_percentage" header="Memory Percentage" />
-              <Column field="swap_used" header="Swap Used" />
+              <Column field="cached_memory" header="Cache Used" body={(rowData) => formatMemory(rowData.cached_memory)} />
+              <Column field="swap_used" header="Swap Used" body={(rowData) => formatMemory(rowData.swap_used)}/>
               <Column field="disk_percentage" header="Disk Percentage" />
               <Column field="cpu_load_per_core" header="CPU Load per Core" body={(rowData) => rowData.cpu_load_per_core.join(', ')} />
-              <Column field="net_bytes_sent" header="Net Bytes Sent" />
-              <Column field="net_bytes_recv" header="Net Bytes Received" />
+              <Column field="net_bytes_sent" header="Net Bytes Sent" body={(rowData) => formatMemory(rowData.net_bytes_sent)} />
+              <Column field="net_bytes_recv" header="Net Bytes Received" body={(rowData) => formatMemory(rowData.net_bytes_recv)} />
               <Column field="active_processes" header="Active Processes" />
-              <Column field="gpu_usage_percentage" header="GPU Usage Percentage" />
+              <Column field="internet_enabled" header="Internet Enable" />
               <Column field="cpu_temperature" header="CPU Temperature" />
               <Column field="collected_at" header="Collected At" sortable />
             </DataTable>

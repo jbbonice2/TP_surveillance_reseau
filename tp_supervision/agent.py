@@ -13,7 +13,7 @@ import subprocess
 import requests
 
 # Adresse IP et port du serveur
-SERVER_HOST = '192.168.182.52'#192.168.244.43
+SERVER_HOST = '192.168.196.52'#192.168.244.43
 SERVER_PORT = 12345
 
 DATA_DIR = os.path.join(os.path.expanduser("~"), ".agent_collector/data")
